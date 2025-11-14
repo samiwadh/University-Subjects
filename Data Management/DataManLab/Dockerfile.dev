@@ -1,0 +1,50 @@
+# Base Jupyter minimale (utente jovyan, porta 8888, home /home/jovyan)
+FROM jupyter/minimal-notebook:python-3.11
+
+# Evita prompt interattivi
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Tool CLI utili
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl vim nano htop \
+    kafkacat \
+    mysql-client \
+  && rm -rf /var/lib/apt/lists/*
+
+
+
+# Tool CLI + dipendenze per mysqlclient
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl vim nano htop \
+    kafkacat \
+    mysql-client \
+    build-essential \
+    pkg-config \
+    default-libmysqlclient-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+
+# Torna all'utente jovyan (non-root)
+USER ${NB_UID}
+
+# Librerie Python utili per data work + duckdb
+RUN pip install --no-cache-dir \
+    jupyterlab \
+    notebook \
+    pandas \
+    numpy \
+    requests \
+    duckdb \
+    pyarrow \
+    sqlalchemy \
+    pymongo \
+    neo4j \
+    mysqlclient
+
+# Cartella di lavoro standard
+WORKDIR /home/jovyan/work
+
+# Avvio: Jupyter Lab sulla porta 8888 (token in env JUPYTER_TOKEN)
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser"]
